@@ -1,3 +1,4 @@
+from sqlalchemy import LargeBinary, cast
 from sqlalchemy.sql.expression import union_all
 
 from CTFd.cache import cache
@@ -5,6 +6,22 @@ from CTFd.models import Awards, Brackets, Challenges, Solves, Teams, Users, db
 from CTFd.utils import get_config
 from CTFd.utils.dates import unix_time_to_utc
 from CTFd.utils.modes import get_model
+
+
+# The account (user or team) named PINNED_NAME is always ranked first on the
+# scoreboard regardless of score. Like everyone else, it only appears once it
+# has a solve or award.
+PINNED_NAME = "PPP"
+
+
+def pinned_first(model):
+    name = model.name
+    # The match must be case-sensitive ("ppp" is not pinned). MySQL/MariaDB's
+    # default collations compare case-insensitively, so compare bytes there.
+    # SQLite and PostgreSQL already compare text case-sensitively.
+    if db.engine.dialect.name in ("mysql", "mariadb"):
+        return (cast(name, LargeBinary) == PINNED_NAME.encode()).desc()
+    return (name == PINNED_NAME).desc()
 
 
 @cache.memoize(timeout=60)
@@ -95,6 +112,7 @@ def get_standings(count=None, bracket_id=None, admin=False, fields=None):
             .join(sumscores, Model.id == sumscores.columns.account_id)
             .join(Brackets, isouter=True)
             .order_by(
+                pinned_first(Model),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
@@ -115,6 +133,7 @@ def get_standings(count=None, bracket_id=None, admin=False, fields=None):
             .join(Brackets, isouter=True)
             .filter(Model.banned == False, Model.hidden == False)
             .order_by(
+                pinned_first(Model),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
@@ -195,6 +214,7 @@ def get_team_standings(count=None, bracket_id=None, admin=False, fields=None):
             .join(sumscores, Teams.id == sumscores.columns.team_id)
             .join(Brackets, isouter=True)
             .order_by(
+                pinned_first(Teams),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
@@ -216,6 +236,7 @@ def get_team_standings(count=None, bracket_id=None, admin=False, fields=None):
             .filter(Teams.banned == False)
             .filter(Teams.hidden == False)
             .order_by(
+                pinned_first(Teams),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
@@ -295,6 +316,7 @@ def get_user_standings(count=None, bracket_id=None, admin=False, fields=None):
             .join(sumscores, Users.id == sumscores.columns.user_id)
             .join(Brackets, isouter=True)
             .order_by(
+                pinned_first(Users),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
@@ -316,6 +338,7 @@ def get_user_standings(count=None, bracket_id=None, admin=False, fields=None):
             .join(Brackets, isouter=True)
             .filter(Users.banned == False, Users.hidden == False)
             .order_by(
+                pinned_first(Users),
                 sumscores.columns.score.desc(),
                 sumscores.columns.date.asc(),
                 sumscores.columns.id.asc(),
