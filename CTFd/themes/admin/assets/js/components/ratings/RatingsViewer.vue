@@ -198,7 +198,7 @@ export default {
       this.loadRatings(page);
     },
     toLocalTime(date) {
-      return dayjs(date).format("MMMM Do, h:mm:ss A");
+      return dayjs(date).format("MMMM Do YYYY, h:mm:ss A");
     },
   },
 };

@@ -142,7 +142,7 @@ export default {
   },
   methods: {
     toLocalTime(date) {
-      return dayjs(date).format("MMMM Do, h:mm:ss A");
+      return dayjs(date).format("MMMM Do YYYY, h:mm:ss A");
     },
     nextPage: function () {
       this.page++;

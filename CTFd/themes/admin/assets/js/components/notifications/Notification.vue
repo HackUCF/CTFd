@@ -37,7 +37,7 @@ export default {
   },
   methods: {
     localDate: function () {
-      return dayjs(this.date).format("MMMM Do, h:mm:ss A");
+      return dayjs(this.date).format("MMMM Do YYYY, h:mm:ss A");
     },
     deleteNotification: function () {
       if (confirm("Are you sure you want to delete this notification?")) {
