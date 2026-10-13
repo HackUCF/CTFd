@@ -1,0 +1,4 @@
+[submodule "CTFd/themes/hackucf"]
+	path = CTFd/themes/hackucf
+	url = https://github.com/HackUCF/CTFd-theme.git
+	branch = main
